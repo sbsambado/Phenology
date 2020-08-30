@@ -48,6 +48,8 @@ bbA <- filter(long, borrelia == 'burgdorferi' & lifestage == 'adult')
 ```
 
 
+Figure 1 compares prevalence of B. burgdroferi (pink) and B. miyamotoi (blue) at individual sites within a region. The points are broken into nymphs (triangles) and adults (circles), with the label of total ticks sampled at that site. For the northeastern sites, it's very clear that B. burgdorferi occurs at higher levels than B. miyamotoi (which we already knew & Rick's unpublished data confirms). This pattern holds up in the midwest at varying degrees, but I would like to incorporate Susan's data (if possible) to distinguish between northwestern/southeastern midwest sites. For the westcoast, there is no clear pattern besides that B. burgdorferi and B. miyamotoi fluctuate site by site. 
+
 ```{r Fig1_prevalence_by_sitesID_region.jpeg}
 
 ### base ggplot
@@ -149,7 +151,7 @@ full <-ggarrange(ne + rremove('legend'),  #ggarrange is how your image will look
 ## ^^ would like to fix legend and make text points more visable 
 ```
 
-finding min max of prevalences by region
+Figure 2 is less detailed, but I wanted to visualize Rick's idea to compare the min/max prevalence of each borrelia in their respective regions. For me, the main takeaway is that B. miyamotoi has greater variation between east and west coast, but the median prevalence of B. miyamotoi remains consistent, so maybe we end back where we left off.
 ```{r Fig2_minmax_prevalence_by_region.jpeg}
 
 # finding the min/max of BM (also median)
