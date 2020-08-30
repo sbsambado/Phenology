@@ -1,0 +1,239 @@
+---
+title: "NIH Vector Biology Submission"
+author: "sbsambado"
+date: "8/29/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# pacakages
+library(readr)
+library(ggplot2)
+library(tidyverse)
+library(dplyr)
+library(ggpubr)
+library(gridExtra)
+
+```
+
+
+Original Excel sheet is called longformat_questingticks08292020.csv
+```{r dataframes}
+#### make my separate dataframes ####
+
+# full dataframe
+long <- read.csv("~/Desktop/longformat_questingticks.csv")
+
+# miyamotoi dataframe
+miyamotoi <- filter(long, borrelia == 'miyamotoi')
+
+# burgdorferi dataframe
+burgdorferi <- filter(long, borrelia == 'burgdorferi')
+
+# miyamotoi & nymphs
+bmN <- filter(long, borrelia == 'miyamotoi' & lifestage == 'nymph')
+
+# miyamotoi & adults
+bmA <- filter(long, borrelia == 'miyamotoi' & lifestage == 'adult')
+
+# burgdorferi & nymphs
+bbN <- filter(long, borrelia == 'burgdorferi' & lifestage == 'nymph')
+
+# burgdorferi & adults
+bbA <- filter(long, borrelia == 'burgdorferi' & lifestage == 'adult')
+
+
+```
+
+
+```{r Fig1_prevalence_by_sitesID_region.jpeg}
+
+### base ggplot
+
+## this is chunky as one plot, so I'll separate it into 3 graphs and plot onto one page later in this chunk, but good base start
+p <- ggplot(data = long, # full dataframe
+            aes(x = site_ID, y = prev, # prev ~ site_ID
+                group = borrelia, color = borrelia)) + # group by BM or BB
+  facet_wrap(~region, nrow = 3, scales = 'free_y') + # separate graph by region, scale to give unique y-axis values/region
+  geom_line() +
+  geom_point()+
+  geom_text(aes(label = total_ticks, hjust = 1.8, vjust = 0), size = 1.4) + # add total tick count next to individual point
+  xlab('Individual Sites') + ylab('Prevalence of Questing Ticks') +
+theme(panel.border = element_blank(), # white background
+        panel.grid.major = element_blank(), # white background
+        panel.grid.minor = element_blank(), # white background
+        axis.line = element_line(color = 'black')) +
+  theme_classic()  # clean background 
+p + theme(axis.text.x = element_text(angle = 45, size = 7)) # angle site labels at 45 degrees, not sure why this argument didn't work in previous chunk
+
+#################### ^^^^ I would like to fix legend, point text labels, the labels for facet groups ###############
+
+
+######## less chunky graph, split ggplots into 3 separate regions and then paste onto one page with ggpubr() ######
+
+## first filter dramaframes into separate regions
+NE <- filter(long, region == 'northeast')
+MW <- filter(long, region == 'midwest')
+WC <- filter(long, region == 'westcoast')
+
+
+# Northeastern plot
+n <-ggplot(data = NE, aes(x = site_ID, y = prev, group = borrelia, color = borrelia))+
+  geom_line()+
+  geom_point(aes(shape = lifestage))+
+  geom_text(aes(label = total_ticks, hjust = 1.8, vjust = 0), size = 2) +
+  xlab('Individual Sites') + ylab('Prevalence of Questing Ticks') +
+  theme(panel.border = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.line = element_line(color = 'black'),
+        axis.text.x = element_text(angle = 45)) +
+  theme_classic()+
+  ggtitle('Northeastern US')
+
+### full plot for northeastern
+ne <- n + theme(axis.text.x = element_text(angle = 90, size = 7),
+                axis.title = element_text(face = 'bold'),
+                plot.title = element_text(face = 'bold', hjust = 0.5)) 
+
+# Midwestern plot
+m <-ggplot(data = MW, aes(x = site_ID, y = prev, group = borrelia, color = borrelia))+
+  geom_line()+
+  geom_point(aes(shape = lifestage)) +
+  geom_text(aes(label = total_ticks, hjust = 1.8, vjust = 0), size = 2) +
+  xlab('Individual Sites') + ylab('Prevalence of Questing Ticks') +
+  theme(panel.border = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.line = element_line(color = 'black'),
+        axis.text.x = element_text(angle = 45)) +
+  theme_classic()+
+  ggtitle('Midwestern US')
+
+
+### full plot for midwest
+mw <- m + theme(axis.text.x = element_text(angle = 90, size = 7),
+                axis.title = element_text(face = 'bold'),
+                plot.title = element_text(face = 'bold', hjust = 0.5)) 
+
+
+# Western plot
+
+w <-ggplot(data = WC, aes(x = site_ID, y = prev, group = borrelia, color = borrelia))+
+  geom_line()+
+  geom_point(aes(shape = lifestage)) +
+  geom_text(aes(label = total_ticks, hjust = 1.8, vjust = 0), size = 2) +
+  xlab('Individual Sites') + ylab('Prevalence of Questing Ticks') +
+  theme(panel.border = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.line = element_line(color = 'black'),
+        axis.text.x = element_text(angle = 45)) +
+  theme_classic() +
+  ggtitle('Western US')
+
+wc <- w + theme(axis.text.x = element_text(angle = 90, size = 7),
+                axis.title = element_text(face = 'bold'),
+                plot.title = element_text(face = 'bold', hjust = 0.5)) 
+
+############# FINAL PRODUCT FOR FIG 1 ######################
+
+full <-ggarrange(ne + rremove('legend'),  #ggarrange is how your image will look like when it's printed 
+          mw + rremove('legend') + rremove('ylab'), #rremove removes items attached to that string 
+          wc + rremove('ylab'),
+          ncol = 3, common.legend = TRUE, legend = 'bottom') # only 1 legend printed at the bottom
+
+
+## ^^ would like to fix legend and make text points more visable 
+```
+
+finding min max of prevalences by region
+```{r Fig2_minmax_prevalence_by_region.jpeg}
+
+# finding the min/max of BM (also median)
+bmminmax <-ggplot(data = miyamotoi) + # pull from just bm dataset
+  stat_summary( # stat_summary can do a bunch of fun things!
+    mapping = aes(x = region, y = prev),
+    fun.min = min, 
+    fun.max = max,
+    fun = median) + # find median
+  theme_classic() +
+  xlab('Regions') + ylab('Prevalence of Questing Ticks') +
+  ggtitle('Range of B. miyamotoi (Min/Max)')+ 
+  theme(axis.text.x = element_text(face = 'bold', size = 12), # improve font
+                axis.title = element_text(face = 'bold'),
+                plot.title = element_text(face = 'bold', hjust = 0.5)) 
+
+# finding the min/max of BB (also median)
+bbminmax<-ggplot(data = burgdorferi) +
+  stat_summary(
+    mapping = aes(x = region, y = prev),
+    fun.min = min, 
+    fun.max = max,
+    fun = median) +
+  theme_classic() +
+  xlab('Regions') + ylab('Prevalence of Questing Ticks') +
+  ggtitle('Range of B. burgdorferi (Min/Max)')+ 
+  theme(axis.text.x = element_text(face = 'bold', size = 12),
+                axis.title = element_text(face = 'bold'),
+                plot.title = element_text(face = 'bold', hjust = 0.5)) 
+
+  
+### FINAL PRODUCT with combined graphs
+minmax <- ggarrange(bmminmax, bbminmax+ rremove('ylab'), # ggarrange fixes your plot in it's final output form
+          ncol = 2)
+
+#### ^^^ would like to fix the order (summary_stat is blocking my arguments), title, try to combine on 1 graph
+```
+
+```{r extra graphs}
+## full dataset (prev ~ site) faceted by state
+ggplot(data = long) +
+  geom_point(mapping = aes(x = site_ID, y = prev, color = borrelia)) +
+  facet_wrap(~ state, nrow = 2)
+
+## full dataset (prev ~ site) faceted by state with jitter
+ggplot(data = long) +
+  geom_point(mapping = aes(x = site_ID, y = prev, color = borrelia), position = 'jitter') +
+  facet_wrap(~ region, nrow = 3) 
+
+## full dataset (prev ~ region) 
+ggplot(data = long) +
+  geom_point(mapping = aes(x = region, y = prev, color = borrelia))
+
+## miyamotoi dataset (prev ~ siteID) by lifestage
+ggplot(data = miyamotoi) +
+  geom_point(mapping = aes(x = site_ID, y = prev, color = lifestage))
+
+## coordflip to visualize FULL data easier with siteID on vertical, could color coordinate this by latitude
+ggplot(data = long, mapping = aes(x = site, y = prev)) +
+  geom_boxplot() +
+  coord_flip()
+
+## coordflip to visualize BM data easier with siteID on vertical, could color coordinate this by latitude
+ggplot(data = miyamotoi, mapping = aes(x = state, y = prev)) +
+  geom_boxplot() +
+  coord_flip()
+
+## coordflip to visualize BB data easier with siteID on vertical, could color coordinate this by latitude
+ggplot(data = burgdorferi, mapping = aes(x = state, y = prev)) +
+  geom_boxplot() +
+  coord_flip()
+
+
+
+```
+
+```{r code that needs to be tweaked more}
+
+# add CI 95%, need to fix code
+sts <- summarySE(long, measurevar = 'prev', groupvars = c('burgdorferi', 'miyamotoi'))
+ggplot(long, aes(x = site_ID, y = prev, color = borrelia))+
+    geom_errorbar(aes(ymin = prev - se, ymax = len + se), width = .1) +
+    geom_line()+
+    geom_point()
+
+```
+
