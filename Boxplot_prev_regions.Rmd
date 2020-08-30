@@ -1,0 +1,69 @@
+---
+title: "Boxplot of Phenology across regions"
+author: "sbsambado"
+date: "8/29/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# packages
+library(readr)
+
+```
+
+
+Original csv sheet is labeled dummydata_08292020.csv
+- prev is summed up by paper and not site
+```{r data frames}
+
+# full dataframe
+short <- read.csv("~/Desktop/dummydata_08292020.csv")
+
+# just nymphs
+nymphdummy <- subset(short, tickstage == 'nymph')
+
+# northeastern nymphs
+northernN <- subset(nymphdummy, region == 'northeast')
+
+# midwest nymphs
+middleN <- subset(nymphdummy, region == 'midwest')
+
+# westcoast nymphs
+westernN <- subset(nymphdummy, region == 'westcoast')
+
+# without eisen since she just screened for b. burgdorferi
+wnoEisen <- westernN[-c(5, 15), ]
+
+
+```
+
+Borrelia type by region
+```{r full boxplot}
+par(mfrow = c(1,3))
+
+# Northeastern data
+boxplot(prev ~ borreliatype, data = northernN,
+        col = c('blue', 'maroon'), main = 'Northeastern US',
+        ylab = 'Nymphal Borrelia Infection',
+        xlab = 'Borrelia type')
+text(x = 2, y = 41, labels = c('N = 4,634'), col = 'red', cex = 1.4)
+
+# Midwestern data
+boxplot(prev ~ borreliatype, data = middleN,
+        col = c('blue', 'maroon'),
+        main = 'Midwestern US',
+        ylab = 'Nymphal Borrelia Infection',
+        xlab = 'Borrelia type')
+text(x = 2, y = 29.7, labels = c('N = 4,136'), col = 'red', cex = 1.4)
+
+# Western data
+boxplot(prev ~ borreliatype, data = wnoEisen,
+        col = c('blue', 'maroon'),
+        main = 'Western US',
+        ylab = 'Nymphal Borrelia Infection',
+        xlab = 'Borrelia type')
+text(x = 2, y = 9, labels = c('N = 8,497'), col = 'red', cex = 1.4) # add text
+
+```

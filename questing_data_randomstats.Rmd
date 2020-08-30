@@ -1,0 +1,143 @@
+---
+title: "random_stats_questingdata"
+author: "sbsambado"
+date: "8/29/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(readr)
+library(stats)
+library(multcomp)
+library(car)
+library(reshape2)
+```
+
+
+Original csv labeled: OFFICIAL_QUESTING_TICKS_SURVEILLENCE_08292020 and qt18
+```{r dataframes}
+
+# full dataframe
+official <- read.csv("~/Desktop/OFFICIAL_QUESTING_TICKS_SURVEILLENCE_08292020.csv")
+
+# bm prev
+bmprev <- official$bm_prev
+
+# bb prev
+bbprev <- official$bb_prev
+
+# full datafram
+```
+
+
+
+```{r random summary stats}
+# used qt18 data
+larval = subset(qt, stage == 'L')
+View(larval)
+
+nymphal = subset(qt, stage == 'N')
+adult = subset(qt, stage == 'A')
+
+par(mfrow = c(3,1))
+plot(larval$collection, 
+     main = 'Larvae')
+plot(nymphal$collection, main = 'Nymphs')
+plot(adult$collection, main = 'Adults')
+par(mfrow = c(1,1))
+
+bm_inf = subset(qt, infection == 'B. miyamotoi')
+
+
+
+count(qt, stage == 'L') # 901
+count(qt, stage == 'N') # 283
+count(qt, stage == 'A') # 85
+
+count(qt, infection == 'B. miyamotoi') #25
+count(qt, infection == 'B. burgdorferi') #28
+
+count(qt, stage == 'L' & infection == 'B. miyamotoi') # 1
+count(qt, stage == 'N' & infection == 'B. miyamotoi') # 12
+count(qt, stage == 'A' & infection == 'B. miyamotoi') # 12
+
+
+count(qt, stage == 'N' & infection == 'B. burgdorferi') #26
+count(qt, stage == 'A' & infection == 'B. burgdorferi') #2
+
+```
+
+```{r random stats}
+
+# how many in each region reported
+str(official$region[official$region == 'westcoast']) #9
+str(official$region[official$region == 'midwest']) # 13
+str(official$region[official$region == 'northeast']) #17
+
+
+# is data normal?
+# p < 0.05 data is not normally distributed 
+with(official, shapiro.test(bmprev[region == 'westcoast']))
+with(official, shapiro.test(bmprev[region == 'northeast']))
+
+west <- subset(official, region == 'westcoast')
+mid <- subset(official, region == 'midwest')
+north <- subset(official, region == 'northeast')
+
+t.test(west$bb_prev, north$bb_prev)
+t.test(west$bm_prev, north$bm_prev)
+t.test(west$bm_prev, mid$bm_prev)
+
+wilcox.test(bm_prev ~ tot_nymph, data = official)
+
+
+# some anovas for categorical data
+prev1 <- aov(official$bb_prev~official$region, data = official)
+plot(prev1)
+
+res=prev1$residuals
+shapiro.test(res)
+
+leveneTest(bb_prev~region, official)
+summary(prev1)
+TukeyHSD(prev1)
+
+post_hoc <- glht(prev1, linfct = mcp(region = 'Tukey'))
+
+plot(official$tot_nymph, official$bm_prev)
+plot(official$bm_prev~official$tot_nymph, xlim = c(1,600))
+glm(official$bm_prev~official$tot_nymph)
+plot(aov(official$bm_prev~official$region))
+
+
+## histograms
+
+par(mfrow = c(3,1))
+hist(official$bm_prev[official$region == 'westcoast'])
+hist(official$bm_prev[official$region == 'midwest'])
+hist(official$bm_prev[official$region == 'northeast'])
+
+par(mfrow = c(3,1))
+hist(official$bb_prev[official$region == 'midwest'])
+hist(official$bb_prev[official$region == 'westcoast'])
+hist(official$bb_prev[official$region == 'northeast'])
+
+
+## boxplots
+official$region<- factor(official$region, levels = c('westcoast', 'midwest','northeast'))
+
+par(mfrow = c(1,2))
+boxplot(official$bm_prev ~ official$region,
+        xlab = 'region', ylab = 'B. miyamotoi prevalence', main = 'Bm in Nymphs')
+boxplot(official$bb_prev ~ official$region,
+        xlab = 'region', ylab = 'B. burgdorferi prevalence', main = 'Bb in Nymphs')
+
+par(mfrow = c(1,2))
+boxplot(official$tot_nymph ~ official$region,
+        xlab = 'region', ylab = 'total questing nymphs', main = 'Tot Nymphs')
+boxplot(official$tot_adult ~ official$region,
+        xlab = 'region', ylab = 'total questing adults', main = 'Tot Adults')
+```
+
